@@ -1,3 +1,4 @@
+cat > index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -686,7 +687,7 @@
         tg.ready();
         tg.expand();
 
-        // Настройки Supabase (ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ)
+        // Настройки Supabase
         const SUPABASE_URL = 'https://gtinslbrwdpqkxeibuqs.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0aW5zbGJyd2RwcWt4ZWlidXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExMjM1MjMsImV4cCI6MjA3NjY5OTUyM30.3LbYP6AcsQ-qVZtdMgH6pJYX0rWLFGSUmT6errUwJOY';
         
@@ -1006,8 +1007,16 @@
                 
                 console.log('Заказ сохранен:', data);
                 
-                // Отправляем данные боту
-                tg.sendData(JSON.stringify(orderData));
+                // Отправляем уведомление через Supabase Edge Function
+                const { data: notificationData, error: notificationError } = await supabase.functions.invoke('send-order-notification', {
+                    body: { orderData }
+                });
+                
+                if (notificationError) {
+                    console.error('Ошибка отправки уведомления:', notificationError);
+                } else {
+                    console.log('Уведомление отправлено:', notificationData);
+                }
                 
                 // Показ сообщения об успешном заказе
                 tg.showAlert('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.');
@@ -1035,3 +1044,4 @@
     </script>
 </body>
 </html>
+EOF
