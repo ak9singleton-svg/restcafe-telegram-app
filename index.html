@@ -110,7 +110,6 @@
             border-radius: 12px;
             padding: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
             transition: all 0.3s ease;
         }
 
@@ -207,10 +206,65 @@
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             transform: translateY(100%);
             transition: transform 0.3s ease;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .cart.show {
             transform: translateY(0);
+        }
+
+        .cart-items {
+            margin-bottom: 15px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-item-quantity {
+            font-size: 14px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .cart-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .cart-btn.remove {
+            background: #e74c3c;
         }
 
         .cart-total {
@@ -219,6 +273,8 @@
             color: #2c3e50;
             margin-bottom: 10px;
             text-align: center;
+            padding: 10px 0;
+            border-top: 1px solid #e1e8ed;
         }
 
         .order-btn {
@@ -593,6 +649,9 @@
 
     <!-- Корзина -->
     <div class="cart" id="cart">
+        <div class="cart-items" id="cart-items">
+            <!-- Товары в корзине -->
+        </div>
         <div class="cart-total">Итого: <span id="total">0₽</span></div>
         <button class="order-btn" id="orderBtn" onclick="placeOrder()" disabled>Оформить заказ</button>
     </div>
@@ -813,13 +872,13 @@
             
             category.items.forEach(item => {
                 html += `
-                    <div class="product-card" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">
+                    <div class="product-card">
                         <div class="product-image">
                             ${getCategoryIcon(category.name)}
                         </div>
                         <div class="product-name">${item.name}</div>
                         <div class="product-price">${item.price}₽</div>
-                        <button class="add-btn">+ Добавить</button>
+                        <button class="add-btn" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">+ Добавить</button>
                     </div>
                 `;
             });
@@ -872,9 +931,40 @@
         function updateCart() {
             const totalElement = document.getElementById('total');
             const orderBtn = document.getElementById('orderBtn');
+            const cartItems = document.getElementById('cart-items');
             
             totalElement.textContent = total + '₽';
             orderBtn.disabled = total === 0;
+            
+            // Отображаем товары в корзине
+            let html = '';
+            Object.values(cart).forEach(item => {
+                html += `
+                    <div class="cart-item">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-controls">
+                            <button class="cart-btn remove" onclick="removeFromCart(${Object.keys(cart).find(key => cart[key] === item)})">-</button>
+                            <div class="cart-item-quantity">${item.quantity}</div>
+                            <button class="cart-btn" onclick="addToCart(${Object.keys(cart).find(key => cart[key] === item)}, '${item.name}', ${item.price})">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartItems.innerHTML = html;
+        }
+
+        // Функция удаления из корзины
+        function removeFromCart(id) {
+            if (cart[id] && cart[id].quantity > 1) {
+                cart[id].quantity -= 1;
+                total -= cart[id].price;
+            } else if (cart[id]) {
+                total -= cart[id].price;
+                delete cart[id];
+            }
+            
+            updateCart();
         }
 
         // Функция показа уведомления
